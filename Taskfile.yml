@@ -1,0 +1,107 @@
+version: 3
+
+vars:
+  root_dir:
+    sh: git rev-parse --show-toplevel
+  minikube_dir:
+    "{{ .root_dir }}/minikube"
+  apps_dir:
+    "{{ .root_dir }}/apps"
+
+  minikube_mem: 3072
+  minikube_cpu: 3
+
+  namespace_playground: playground
+  namespace_endpoint: endpoint
+
+  docker_repo: chelyshkin
+  golang_version: 1.21
+
+tasks:
+  default:
+    desc: Default task.
+    cmds:
+      - echo "Please enter a task name or use -l / --list-all to list all available tasks"
+    silent: true
+
+  apps/vendor:
+    desc: Run go mod vendor.
+    cmds:
+      - |
+        cd {{ .apps_dir }} && go mod tidy
+        if [ -d "{{ .apps_dir }}/vendor" ]; then
+          echo "{{ .apps_dir }}/vendor folder already exist"
+        else
+          go mod vendor
+        fi
+    silent: true
+    internal: true
+
+  apps/local/build:
+    desc: "Build an application, add arg APP with directory inside ./apps"
+    deps:
+      - apps/vendor
+    dir: "{{ .apps_dir }}"
+    cmds:
+      - |
+        if [ "{{ .APP }}" = "" ]; then
+          echo "Error: APP variable is not set. Use APP=app_directory.";
+          exit 1;
+        fi
+        echo "Building the application in directory: {{ .apps_dir }}/{{ .APP }}"
+        go build -mod=vendor -ldflags="-w -s" -o {{ .root_dir }}/bin/{{ .APP }} {{ .apps_dir }}/{{ .APP }}/cmd
+        chmod a+x {{ .root_dir }}/bin/{{ .APP }}
+    silent: true
+
+  apps/docker/build:
+    desc: "Build a docker images with application, add arg APP with directory inside ./apps"
+    deps:
+      - apps/vendor
+    cmds:
+      - |
+        if [ "{{ .APP }}" = "" ]; then
+          echo "Error: APP variable is not set. Use APP=app_directory.";
+          exit 1;
+        fi
+        if [ "{{ .TAG }}" = "" ]; then
+          echo "Error: TAG variable is not set. Use TAG=latest.";
+          exit 1;
+        fi
+        echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
+        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}/golang-playground-{{ .APP }}:{{ .TAG }} \
+          --build-arg GO_VERSION={{ .golang_version }} \
+          --build-arg NAME={{ .APP }} \
+        -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
+    silent: true
+
+  apps/docker/push:
+    desc: Push docker image.
+    env:
+      DOCKER_USER: '{{ .DOCKER_USER }}'
+      DOCKER_PASS: '{{ .DOCKER_PASS }}'
+    cmds:
+      - |
+        if [ "{{ .IMAGE }}" = "" ]; then
+          echo "Error: IMAGE variable is not set. Use IMAGE=docker_image.";
+          exit 1;
+        fi
+        if [ "{{ .TAG }}" = "" ]; then
+          echo "Error: TAG variable is not set. Use TAG=latest.";
+          exit 1;
+        fi
+        echo "Pushing image: {{ .IMAGE }} with tag {{ .TAG }}"
+        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+        docker push {{ .IMAGE }}:{{ .TAG }}
+    silent: true
+
+  minikube/deploy/apps:
+    desc: Deploy service to minikube.
+    cmds:
+      - for: ["entrypoint"]
+        cmd: |
+          echo {{ .ITEM }}
+
+
+
+      
+
