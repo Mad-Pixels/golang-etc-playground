@@ -12,7 +12,7 @@ vars:
   minikube_cpu: 3
 
   namespace_playground: playground
-  namespace_endpoint: endpoint
+  namespace_apps: apps
 
   docker_repo: chelyshkin
   golang_version: 1.21
@@ -99,9 +99,28 @@ tasks:
     cmds:
       - for: ["entrypoint"]
         cmd: |
-          echo {{ .ITEM }}
+          if helm list -q -n {{ .namespace_apps }} | grep -q {{ .ITEM }}; then
+            helm upgrade {{ .ITEM }} {{ .minikube_dir }}/{{ .ITEM }} -n {{ .namespace_apps }}
+          else
+            kubectl create namespace {{ .namespace_apps }} || true
+            helm install {{ .ITEM }} {{ .minikube_dir }}/{{ .ITEM }} -n {{ .namespace_apps }}
+          fi
 
+  minikube/up:
+    desc: Run minikube with service.
+    cmds:
+      - minikube stop || true
+      - minikube cache delete
+      - minikube delete
+      - minikube config set memory {{ .minikube_mem }}
+      - minikube config set cpus {{ .minikube_cpu }}
+      - minikube start --driver=docker
 
+      - kubectl create namespace {{ .namespace_apps }}
 
-      
+      - task: minikube/deploy/apps
 
+  minikube/apps/entrypoint-lookup:
+    desc: Minikube tunnel to entrypoint.
+    cmds:
+      - minikube service entrypoint -n {{ .namespace_apps }}
