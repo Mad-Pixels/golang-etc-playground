@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Pod() {
+func Pod(ctx context.Context) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())

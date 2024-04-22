@@ -2,41 +2,31 @@ package entrypoint
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/Mad-Pixels/golang-playground/apps"
-	"github.com/Mad-Pixels/golang-playground/apps/pkg/k8s"
 )
 
-type probeResponse struct {
-	Host    string `json:"host"`
-	Message string `json:"message,omitempty"`
-	Status  string `json:"status"`
+func handlerLivenessProbe(w http.ResponseWriter, r *http.Request) {
+	responseOk(responseData{Host: apps.ReplicaID()}, w, r)
 }
 
-func handlerLivenessProbe(w http.ResponseWriter, _ *http.Request) {
-	response := probeResponse{
-		Status:  "OK",
-		Message: "LivenessProbe",
-		Host:    apps.ReplicaID(),
+func handlerReadinessProbe(w http.ResponseWriter, r *http.Request) {
+	responseOk(responseData{Host: apps.ReplicaID()}, w, r)
+}
+
+func handlerPlayground(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		responseErrBadRequest(responseData{Message: "only POST method allowed"}, w, r)
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(response)
-}
-
-func handlerReadinessProbe(w http.ResponseWriter, _ *http.Request) {
-	response := probeResponse{
-		Status:  "OK",
-		Message: "ReadnessProbe",
-		Host:    apps.ReplicaID(),
+	var request requestPlayground
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		responseErrBadRequest(responseData{Message: "invalid body"}, w, r)
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(response)
-}
 
-func playground(w http.ResponseWriter, r *http.Request) {
-	k8s.Pod()
-	w.Write([]byte("welcome"))
+	//k8s.Pod()
+	responseOk(responseData{Data: fmt.Sprintf("v%s-%s", request.Version, r.Context().Value("uid"))}, w, r)
 }
