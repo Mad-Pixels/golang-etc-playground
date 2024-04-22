@@ -2,6 +2,7 @@ package entrypoint
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/Mad-Pixels/golang-playground/apps"
@@ -27,26 +28,26 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 		responseErrBadRequest(responseData{Message: "invalid body"}, w, r)
 		return
 	}
+	request.Name = r.Context().Value("uid").(string)
+
 	spec, err := utils.Execute(
 		playgroundSpec,
-		playgroundTmpl{
-			Name:    r.Context().Value("uid").(string),
-			Version: request.Version,
-		},
+		request,
 	)
 	if err != nil {
-		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
+	fmt.Println(spec)
 
 	podSpec, err := k8s.ToPod(spec)
 	if err != nil {
-		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
 	pod, err := k8s.PodCreate(r.Context(), playgroundNs, podSpec)
 	if err != nil {
-		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
 	responseOk(responseData{Data: pod.Name}, w, r)

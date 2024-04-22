@@ -4,12 +4,8 @@ const playgroundNs = "playground"
 
 type requestPlayground struct {
 	Version string `json:"version"`
-	Source  []byte `json:"source"`
-}
-
-type playgroundTmpl struct {
+	Source  string `json:"source"`
 	Name    string
-	Version string
 }
 
 var playgroundSpec = `
@@ -30,6 +26,12 @@ var playgroundSpec = `
                     "runAsNonRoot": true,
                     "runAsUser": 1000
                 },
+                "env": [
+                    {
+                        "name": "GOCACHE",
+                        "value": "/workspace/.cache"
+                    }
+                ],
                 "resources": {
                     "requests": {
                         "cpu": "100m",
@@ -39,7 +41,21 @@ var playgroundSpec = `
                         "cpu": "200m",
                         "memory": "400Mi"
                     }
-                }
+                },
+				"command": ["/bin/sh", "-c"],
+				"args": ["echo '{{ .Source | escape }}' > main.go && go build main.go && ./main"],
+				"volumeMounts": [
+					{
+                        "name": "playground-storage",
+                        "mountPath": "/workspace"
+                    }
+				]
+            }
+        ],
+		"volumes": [
+            {
+                "name": "playground-storage",
+                "emptyDir": {}
             }
         ]
     }
