@@ -10,17 +10,9 @@ env:
     value: "{{ .Values.LOG_LEVEL }}"
 
 image:
-  repository: chelyshkin/golang-playground-entrypoint
+  repository: golang-playground-entrypoint
   pullPolicy: IfNotPresent
   tag: "latest"
-
-probes:
-  liveness:
-    path: "/api/internal/probe/liveness"
-    port: http
-  readness:
-    path: "/api/internal/probe/readness"
-    port: http
 
 imagePullSecrets: []
 nameOverride: ""

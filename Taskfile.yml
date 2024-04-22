@@ -14,7 +14,7 @@ vars:
   namespace_playground: playground
   namespace_apps: apps
 
-  docker_repo: chelyshkin
+  docker_repo: golang-playground
   golang_version: 1.21
 
 tasks:
@@ -23,6 +23,39 @@ tasks:
     cmds:
       - echo "Please enter a task name or use -l / --list-all to list all available tasks"
     silent: true
+
+  check/env/app:
+    desc: "Check that APP value exist"
+    cmds:
+      - |
+        if [ "{{ .APP }}" = "" ]; then
+          echo "Error: APP variable is not set. Use APP=app_directory.";
+          exit 1;
+        fi
+    silent: true
+    internal: true
+
+  check/env/tag:
+    desc: "Check that TAG value exist"
+    cmds:
+      - |
+        if [ "{{ .TAG }}" = "" ]; then
+          echo "Error: TAG variable is not set. Use TAG=latest.";
+          exit 1;
+        fi
+    silent: true
+    internal: true
+
+  check/env/image:
+    desc: "Check that IMAGE value exist"
+    cmds:
+      - |
+        if [ "{{ .IMAGE }}" = "" ]; then
+          echo "Error: IMAGE variable is not set. Use IMAGE=docker_image.";
+          exit 1;
+        fi
+    silent: true
+    internal: true
 
   apps/vendor:
     desc: "Run go mod vendor"
@@ -40,14 +73,11 @@ tasks:
   apps/local/build:
     desc: "Build an application, add arg APP with directory inside ./apps"
     deps:
+      - check/env/app
       - apps/vendor
     dir: "{{ .apps_dir }}"
     cmds:
       - |
-        if [ "{{ .APP }}" = "" ]; then
-          echo "Error: APP variable is not set. Use APP=app_directory.";
-          exit 1;
-        fi
         echo "Building the application in directory: {{ .apps_dir }}/{{ .APP }}"
         go build -mod=vendor -ldflags="-w -s" -o {{ .root_dir }}/bin/{{ .APP }} {{ .apps_dir }}/{{ .APP }}/cmd
         chmod a+x {{ .root_dir }}/bin/{{ .APP }}
@@ -56,19 +86,13 @@ tasks:
   apps/docker/build:
     desc: "Build a docker images with application, add arg APP with directory inside ./apps"
     deps:
+      - check/env/app
+      - check/env/tag
       - apps/vendor
     cmds:
       - |
-        if [ "{{ .APP }}" = "" ]; then
-          echo "Error: APP variable is not set. Use APP=app_directory.";
-          exit 1;
-        fi
-        if [ "{{ .TAG }}" = "" ]; then
-          echo "Error: TAG variable is not set. Use TAG=latest.";
-          exit 1;
-        fi
         echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
-        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}/golang-playground-{{ .APP }}:{{ .TAG }} \
+        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
           --build-arg GO_VERSION={{ .golang_version }} \
           --build-arg NAME={{ .APP }} \
         -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
@@ -77,26 +101,29 @@ tasks:
   apps/minikube/build:
     desc: "INSIDE MINIKUBE ENV: Build a docker images with application, add arg APP with directory inside ./apps"
     deps:
+      - check/env/app
+      - check/env/tag
       - apps/vendor
     cmds:
-      - eval $(minikube docker-env)
-      - task: apps/docker/build
+      - |
+        eval $(minikube docker-env)
+        echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
+        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
+          --build-arg GO_VERSION={{ .golang_version }} \
+          --build-arg NAME={{ .APP }} \
+        -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
+    silent: true
 
   apps/docker/push:
     desc: "Push docker image"
     env:
       DOCKER_USER: '{{ .DOCKER_USER }}'
       DOCKER_PASS: '{{ .DOCKER_PASS }}'
+    deps:
+      - check/env/image
+      - check/env/tag
     cmds:
       - |
-        if [ "{{ .IMAGE }}" = "" ]; then
-          echo "Error: IMAGE variable is not set. Use IMAGE=docker_image.";
-          exit 1;
-        fi
-        if [ "{{ .TAG }}" = "" ]; then
-          echo "Error: TAG variable is not set. Use TAG=latest.";
-          exit 1;
-        fi
         echo "Pushing image: {{ .IMAGE }} with tag {{ .TAG }}"
         docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
         docker push {{ .IMAGE }}:{{ .TAG }}

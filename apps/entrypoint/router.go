@@ -8,7 +8,7 @@ func (a App) routerTools() {
 	router := func() chi.Router {
 		r := chi.NewRouter()
 		r.Get("/probe/liveness", handlerLivenessProbe)
-		r.Get("/probe/readness", handlerReadnessProbe)
+		r.Get("/probe/readiness", handlerReadinessProbe)
 		return r
 	}
 	a.server.Router().Mount("/api/internal", router())

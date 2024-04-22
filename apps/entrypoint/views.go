@@ -28,7 +28,7 @@ func handlerLivenessProbe(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(response)
 }
 
-func handlerReadnessProbe(w http.ResponseWriter, _ *http.Request) {
+func handlerReadinessProbe(w http.ResponseWriter, _ *http.Request) {
 	response := probeResponse{
 		Status:  "OK",
 		Message: "ReadnessProbe",
