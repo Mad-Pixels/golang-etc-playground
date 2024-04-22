@@ -1,17 +1,27 @@
 package main
 
 import (
-	"net/http"
+	"context"
+	"log"
+	"os"
 
-	"github.com/go-chi/chi/v5"
+	apps "github.com/Mad-Pixels/golang-playground"
+	"github.com/Mad-Pixels/golang-playground/entrypoint"
 )
 
 func main() {
-	r := chi.NewRouter()
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	logLevel := os.Getenv(apps.LogLevelEnv)
+	if logLevel == "" {
+		logLevel = apps.LogLevelValue
+	}
+	listenPort := os.Getenv(apps.ListenPortEnv)
+	if listenPort == "" {
+		listenPort = apps.ListenPortValue
+	}
 
-		w.Write([]byte("welcome"))
-	})
-
-	http.ListenAndServe(":3000", r)
+	app, err := entrypoint.New(listenPort, logLevel)
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.Run(context.Background())
 }

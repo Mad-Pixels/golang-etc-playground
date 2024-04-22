@@ -1,8 +1,13 @@
-# Default values for entrypoint.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+LISTEN_PORT: 3000
+LOG_LEVEL: ERROR
 
 replicaCount: 1
+
+env:
+  - name: LISTEN_HTTP_ADDR
+    value: {{ printf ":%d" .Values.LISTEN_PORT }}
+  - name: LOG_LEVEL
+    value: {{ .Values.LOG_LEVEL }}
 
 image:
   repository: chelyshkin/golang-playground-entrypoint
@@ -11,10 +16,10 @@ image:
 
 probes:
   liveness:
-    path: "/"
+    path: "/api/internal/probe/liveness"
     port: http
   readness:
-    path: "/"
+    path: "/api/internal/probe/readness"
     port: http
 
 imagePullSecrets: []
@@ -66,7 +71,7 @@ ingress:
           backend:
             service:
               name: entrypoint
-              port: 3000
+              port: {{ .Values.LISTEN_PORT }}
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
