@@ -21,6 +21,7 @@ var playgroundSpec = `
     },
     "spec": {
         "activeDeadlineSeconds": 45,
+		"restartPolicy": "Never",
         "containers": [
             {
                 "name": "{{ .Name }}-container",
