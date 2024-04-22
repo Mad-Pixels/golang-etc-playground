@@ -35,7 +35,6 @@ func New(listenPort, logLevel string) (App, error) {
 	s, err := ws.New(
 		ws.WithMiddlewareReqID(),
 		ws.WithMiddlewareRealIP(),
-		ws.WithMiddlewareTimeout(5),
 
 		ws.WithCustomPort(p),
 		ws.WithShutdownTimeout(10),
