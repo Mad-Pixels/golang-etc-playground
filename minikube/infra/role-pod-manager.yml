@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-manager
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manage-pods-across-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: pod-manager
+    namespace: apps
+roleRef:
+  kind: ClusterRole
+  name: pod-manager
+  apiGroup: rbac.authorization.k8s.io

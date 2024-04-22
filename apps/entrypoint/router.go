@@ -17,7 +17,7 @@ func (a App) routerTools() {
 func (a App) routerViews() {
 	router := func() chi.Router {
 		r := chi.NewRouter()
-		r.Get("/", handlerInfo)
+		r.Get("/playground", playground)
 		return r
 	}
 	a.server.Router().Mount("/api/v1", router())

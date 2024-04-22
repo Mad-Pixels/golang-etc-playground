@@ -15,7 +15,7 @@ vars:
   namespace_apps: apps
 
   docker_repo: golang-playground
-  golang_version: 1.21
+  golang_version: 1.22
 
 tasks:
   default:
@@ -129,6 +129,11 @@ tasks:
         docker push {{ .IMAGE }}:{{ .TAG }}
     silent: true
 
+  minikube/deploy/infra:
+    desc: "Deploy infra to minikube"
+    cmds:
+      - kubectl apply -f minikube/infra/role-pod-manager.yml
+
   minikube/deploy/apps:
     desc: "Deploy service to minikube"
     cmds:
@@ -151,7 +156,9 @@ tasks:
       - minikube config set cpus {{ .minikube_cpu }}
       - minikube start --driver=docker
 
+      - kubectl create namespace {{ .namespace_playground }}
       - kubectl create namespace {{ .namespace_apps }}
+      - task: minikube/deploy/infra
       - task: minikube/deploy/apps
 
   minikube/apps/entrypoint-lookup:
