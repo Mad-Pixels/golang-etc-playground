@@ -1,19 +1,30 @@
 package ws
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 )
 
 // Option wrapper for web server.
 type Option func(ws *WS)
 
-// WithMiddlewareReqID injects a request ID into the context of each request.
+// WithMiddlewareReqID injects a request ID into the context (uid as string) of each request.
 func WithMiddlewareReqID() Option {
 	return func(ws *WS) {
-		ws.router.Use(middleware.RequestID)
+		ws.router.Use(func(next http.Handler) http.Handler {
+			fn := func(w http.ResponseWriter, r *http.Request) {
+				ctx := context.WithValue(r.Context(),
+					"uid",
+					uuid.New().String(),
+				)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			}
+			return http.HandlerFunc(fn)
+		})
 	}
 }
 
