@@ -16,10 +16,10 @@ ARG LD_FLAGS
 ARG GOCACHE
 ARG NAME
 
-WORKDIR /go/src/${NAME}
-COPY apps/${NAME} apps/vendor apps/go.mod apps/go.sum ./
+COPY apps /go/src/apps
+WORKDIR /go/src/apps
 
-ENV GOARCH=amd64
+ENV GOARCH=arm64
 RUN go mod vendor
 RUN --mount=type=cache,target="${GOCACHE}" \
       go build \
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target="${GOCACHE}" \
         -ldflags="${LD_FLAGS}"   \
         -gcflags="${GC_FLAGS}"   \
         -o /out/${NAME}          \
-      ./cmd
+      /go/src/apps/${NAME}/cmd
 
 FROM alpine:${ALPINE_VERSION} AS amd64
 ARG NAME
@@ -44,8 +44,8 @@ ARG LD_FLAGS
 ARG GOCACHE
 ARG NAME
 
-WORKDIR /go/src/${NAME}
-COPY apps/${NAME} apps/vendor apps/go.mod apps/go.sum ./
+COPY apps /go/src/apps
+WORKDIR /go/src/apps
 
 ENV GOARCH=arm64
 RUN go mod vendor
@@ -56,7 +56,7 @@ RUN --mount=type=cache,target="${GOCACHE}" \
         -ldflags="${LD_FLAGS}"   \
         -gcflags="${GC_FLAGS}"   \
         -o /out/${NAME}          \
-      ./cmd
+      /go/src/apps/${NAME}/cmd
 
 FROM alpine:${ALPINE_VERSION} AS arm64
 ARG NAME

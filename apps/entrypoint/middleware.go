@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	apps "github.com/Mad-Pixels/golang-playground"
-	"github.com/Mad-Pixels/golang-playground/pkg/ws"
+	"github.com/Mad-Pixels/golang-playground/apps"
+	"github.com/Mad-Pixels/golang-playground/apps/pkg/ws"
 
 	"github.com/google/uuid"
 )

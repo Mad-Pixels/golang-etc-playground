@@ -5,9 +5,9 @@ replicaCount: 1
 
 env:
   - name: LISTEN_HTTP_ADDR
-    value: {{ printf ":%d" .Values.LISTEN_PORT }}
+    value: ":{{ .Values.LISTEN_PORT }}"
   - name: LOG_LEVEL
-    value: {{ .Values.LOG_LEVEL }}
+    value: "{{ .Values.LOG_LEVEL }}"
 
 image:
   repository: chelyshkin/golang-playground-entrypoint
@@ -71,7 +71,7 @@ ingress:
           backend:
             service:
               name: entrypoint
-              port: {{ .Values.LISTEN_PORT }}
+              port: "{{ .Values.LISTEN_PORT }}"
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

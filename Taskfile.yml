@@ -19,13 +19,13 @@ vars:
 
 tasks:
   default:
-    desc: Default task.
+    desc: "Default task"
     cmds:
       - echo "Please enter a task name or use -l / --list-all to list all available tasks"
     silent: true
 
   apps/vendor:
-    desc: Run go mod vendor.
+    desc: "Run go mod vendor"
     cmds:
       - |
         cd {{ .apps_dir }} && go mod tidy
@@ -74,8 +74,16 @@ tasks:
         -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
     silent: true
 
+  apps/minikube/build:
+    desc: "INSIDE MINIKUBE ENV: Build a docker images with application, add arg APP with directory inside ./apps"
+    deps:
+      - apps/vendor
+    cmds:
+      - eval $(minikube docker-env)
+      - task: apps/docker/build
+
   apps/docker/push:
-    desc: Push docker image.
+    desc: "Push docker image"
     env:
       DOCKER_USER: '{{ .DOCKER_USER }}'
       DOCKER_PASS: '{{ .DOCKER_PASS }}'
@@ -95,7 +103,7 @@ tasks:
     silent: true
 
   minikube/deploy/apps:
-    desc: Deploy service to minikube.
+    desc: "Deploy service to minikube"
     cmds:
       - for: ["entrypoint"]
         cmd: |
@@ -107,7 +115,7 @@ tasks:
           fi
 
   minikube/up:
-    desc: Run minikube with service.
+    desc: "Run minikube with service"
     cmds:
       - minikube stop || true
       - minikube cache delete
@@ -117,10 +125,9 @@ tasks:
       - minikube start --driver=docker
 
       - kubectl create namespace {{ .namespace_apps }}
-
       - task: minikube/deploy/apps
 
   minikube/apps/entrypoint-lookup:
-    desc: Minikube tunnel to entrypoint.
+    desc: "Minikube tunnel to entrypoint"
     cmds:
       - kubectl port-forward svc/entrypoint 3000:3000 -n {{ .namespace_apps }}

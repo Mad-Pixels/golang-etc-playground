@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	apps "github.com/Mad-Pixels/golang-playground"
+	"github.com/Mad-Pixels/golang-playground/apps"
 )
 
 type probeResponse struct {

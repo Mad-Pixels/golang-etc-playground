@@ -4,8 +4,8 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/Mad-Pixels/golang-playground/pkg/log"
-	"github.com/Mad-Pixels/golang-playground/pkg/ws"
+	"github.com/Mad-Pixels/golang-playground/apps/pkg/log"
+	"github.com/Mad-Pixels/golang-playground/apps/pkg/ws"
 
 	"github.com/go-chi/chi/v5"
 )

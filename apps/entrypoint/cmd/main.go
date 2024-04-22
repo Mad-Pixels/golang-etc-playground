@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	apps "github.com/Mad-Pixels/golang-playground"
-	"github.com/Mad-Pixels/golang-playground/entrypoint"
+	"github.com/Mad-Pixels/golang-playground/apps"
+	"github.com/Mad-Pixels/golang-playground/apps/entrypoint"
 )
 
 func main() {
