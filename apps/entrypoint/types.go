@@ -67,7 +67,7 @@ var playgroundPodSpec = `
             {
                 "name": "playground-storage",
                 "configMap": {
-					"name": "f1280140-3334-4261-86ef-98fd40f94a70"
+					"name": "{{ .Name }}"
 				}
             }
         ]

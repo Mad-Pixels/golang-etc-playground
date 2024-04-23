@@ -6,8 +6,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 // ToConfigMap parses a JSON string into a ConfigMap object.
@@ -21,13 +19,19 @@ func ToConfigMap(raw string) (*corev1.ConfigMap, error) {
 
 // ConfigMapCreate creates a ConfigMap in the specified namespace.
 func ConfigMapCreate(ctx context.Context, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := kubernetes.NewForConfig(config)
+	client, err := newClient()
 	if err != nil {
 		return nil, err
 	}
 	return client.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+}
+
+// ConfigMapDelete deletes a ConfigMap in the specified namespace.
+func ConfigMapDelete(ctx context.Context, namespace, name string) error {
+	client, err := newClient()
+	if err != nil {
+		return err
+	}
+	deleteOptions := metav1.DeleteOptions{}
+	return client.CoreV1().ConfigMaps(namespace).Delete(ctx, name, deleteOptions)
 }
