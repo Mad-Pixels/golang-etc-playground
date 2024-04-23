@@ -29,7 +29,6 @@ var playgroundPodSpec = `
         "name": "{{ .Name }}"
     },
     "spec": {
-        "activeDeadlineSeconds": 60,
 		"restartPolicy": "Never",
         "containers": [
             {
@@ -47,15 +46,15 @@ var playgroundPodSpec = `
                 ],
                 "resources": {
                     "requests": {
-                        "cpu": "100m",
-                        "memory": "200Mi"
+                        "cpu": "1000m",
+                        "memory": "400Mi"
                     },
                     "limits": {
-                        "cpu": "200m",
-                        "memory": "400Mi"
+                        "cpu": "1600m",
+                        "memory": "600Mi"
                     }
                 },
-				"command": ["du", "/workspace/main.go"],
+				"command": ["go", "run", "/workspace/main.go"],
 				"volumeMounts": [
 					{
                         "name": "playground-storage",
@@ -68,13 +67,7 @@ var playgroundPodSpec = `
             {
                 "name": "playground-storage",
                 "configMap": {
-					"name": "{{ .Name }}",
-					"items": [
-						{
-              				"key": "main.go",
-              				"path": "main.go"
-            			}
-					]
+					"name": "f1280140-3334-4261-86ef-98fd40f94a70"
 				}
             }
         ]
