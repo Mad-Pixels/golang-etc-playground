@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// ToPod ...
+// ToPod parses a JSON string into a Pod object.
 func ToPod(raw string) (*corev1.Pod, error) {
 	var pod corev1.Pod
 	if err := json.Unmarshal([]byte(raw), &pod); err != nil {
@@ -19,7 +19,7 @@ func ToPod(raw string) (*corev1.Pod, error) {
 	return &pod, nil
 }
 
-// PodCreate ...
+// PodCreate creates a Pod in the specified namespace.
 func PodCreate(ctx context.Context, namespace string, pod *corev1.Pod) (*corev1.Pod, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {

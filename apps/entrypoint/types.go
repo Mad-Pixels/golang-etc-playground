@@ -8,7 +8,20 @@ type requestPlayground struct {
 	Name    string
 }
 
-var playgroundSpec = `
+var playgroundMapSpec = `
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "{{ .Name }}"
+  },
+  "data": {
+    "main.go": "{{ .Source | escape }}"
+  }
+}
+`
+
+var playgroundPodSpec = `
 {
     "apiVersion": "v1",
     "kind": "Pod",
@@ -16,7 +29,7 @@ var playgroundSpec = `
         "name": "{{ .Name }}"
     },
     "spec": {
-        "activeDeadlineSeconds": 45,
+        "activeDeadlineSeconds": 60,
 		"restartPolicy": "Never",
         "containers": [
             {
@@ -29,7 +42,7 @@ var playgroundSpec = `
                 "env": [
                     {
                         "name": "GOCACHE",
-                        "value": "/workspace/.cache"
+                        "value": "/tmp/.cache"
                     }
                 ],
                 "resources": {
@@ -42,8 +55,7 @@ var playgroundSpec = `
                         "memory": "400Mi"
                     }
                 },
-				"command": ["/bin/sh", "-c"],
-				"args": ["echo '{{ .Source | escape }}' > main.go && go build main.go && ./main"],
+				"command": ["du", "/workspace/main.go"],
 				"volumeMounts": [
 					{
                         "name": "playground-storage",
@@ -55,7 +67,15 @@ var playgroundSpec = `
 		"volumes": [
             {
                 "name": "playground-storage",
-                "emptyDir": {}
+                "configMap": {
+					"name": "{{ .Name }}",
+					"items": [
+						{
+              				"key": "main.go",
+              				"path": "main.go"
+            			}
+					]
+				}
             }
         ]
     }

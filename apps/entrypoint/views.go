@@ -30,21 +30,41 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	request.Name = r.Context().Value("uid").(string)
 
-	spec, err := utils.Execute(
-		playgroundSpec,
+	mapSpecTpl, err := utils.Execute(
+		playgroundMapSpec,
 		request,
 	)
 	if err != nil {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
-	fmt.Println(spec)
-
-	podSpec, err := k8s.ToPod(spec)
+	podSpecTpl, err := utils.Execute(
+		playgroundPodSpec,
+		request,
+	)
 	if err != nil {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
+
+	mapSpec, err := k8s.ToConfigMap(mapSpecTpl)
+	if err != nil {
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
+		return
+	}
+	fmt.Println(mapSpec)
+	podSpec, err := k8s.ToPod(podSpecTpl)
+	if err != nil {
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
+		return
+	}
+
+	_, err = k8s.ConfigMapCreate(r.Context(), playgroundNs, mapSpec)
+	if err != nil {
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
+		return
+	}
+
 	pod, err := k8s.PodCreate(r.Context(), playgroundNs, podSpec)
 	if err != nil {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)

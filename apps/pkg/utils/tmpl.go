@@ -22,7 +22,7 @@ func Execute(data string, values any) (string, error) {
 		return "", err
 	}
 	var body bytes.Buffer
-	if err := tpl.Execute(&body, values); err != nil {
+	if err = tpl.Execute(&body, values); err != nil {
 		return "", err
 	}
 	return body.String(), nil
