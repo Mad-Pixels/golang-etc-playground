@@ -3,6 +3,7 @@ package entrypoint
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Mad-Pixels/golang-playground/apps"
 	"github.com/Mad-Pixels/golang-playground/apps/pkg/k8s"
@@ -64,6 +65,11 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	pod, err := k8s.PodCreate(r.Context(), playgroundNs, podSpec)
 	if err != nil {
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
+		return
+	}
+	time.Sleep(time.Second * 10)
+	if err = k8s.Read(request.Name, playgroundNs); err != nil {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
