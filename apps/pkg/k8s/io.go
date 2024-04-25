@@ -9,10 +9,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func Read(name, ns string) error {
+func Read(name, ns string) (string, error) {
 	client, err := newClient()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req := client.CoreV1().Pods(ns).GetLogs(name, &v1.PodLogOptions{})
@@ -27,5 +27,5 @@ func Read(name, ns string) error {
 		panic(err.Error())
 	}
 	fmt.Printf("Logs for %s in %s:\n%s\n", name, ns, buf.String())
-	return nil
+	return buf.String(), nil
 }

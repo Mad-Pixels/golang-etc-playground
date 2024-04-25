@@ -2,12 +2,13 @@ package entrypoint
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Mad-Pixels/golang-playground/apps"
 	"github.com/Mad-Pixels/golang-playground/apps/pkg/k8s"
 	"github.com/Mad-Pixels/golang-playground/apps/pkg/utils"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func handlerLivenessProbe(w http.ResponseWriter, r *http.Request) {
@@ -63,17 +64,35 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
-	pod, err := k8s.PodCreate(r.Context(), playgroundNs, podSpec)
+	_, err = k8s.PodCreate(r.Context(), playgroundNs, podSpec)
 	if err != nil {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
-	time.Sleep(time.Second * 10)
-	if err = k8s.Read(request.Name, playgroundNs); err != nil {
+
+	watcher, err := k8s.PodWatch(r.Context(), playgroundNs, request.Name)
+	if err != nil {
 		responseErrInternal(responseData{Message: err.Error()}, w, r)
 		return
 	}
-	responseOk(responseData{Data: pod.Name}, w, r)
+	for event := range watcher.ResultChan() {
+		p, ok := event.Object.(*corev1.Pod)
+		if !ok {
+			fmt.Println("unexpected type")
+			continue
+		}
+		fmt.Printf("Pod %s is in phase %s\n", p.Name, p.Status.Phase)
+		if p.Status.Phase == "Failed" || p.Status.Phase == "Succeeded" {
+			break
+		}
+	}
+	output, err := k8s.Read(request.Name, playgroundNs)
+	if err != nil {
+		responseErrInternal(responseData{Message: err.Error()}, w, r)
+		return
+	}
+
+	responseOk(responseData{Data: output}, w, r)
 	//defer k8s.ConfigMapDelete(r.Context(), playgroundNs, request.Name)
 	//defer k8s.PodDelete(r.Context(), playgroundNs, request.Name)
 }
