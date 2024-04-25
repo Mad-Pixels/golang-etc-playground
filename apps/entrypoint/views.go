@@ -93,6 +93,6 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseOk(responseData{Data: output}, w, r)
-	//defer k8s.ConfigMapDelete(r.Context(), playgroundNs, request.Name)
-	//defer k8s.PodDelete(r.Context(), playgroundNs, request.Name)
+	defer k8s.ConfigMapDelete(r.Context(), playgroundNs, request.Name)
+	defer k8s.PodDelete(r.Context(), playgroundNs, request.Name)
 }
