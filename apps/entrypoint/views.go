@@ -40,7 +40,6 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 		responseErrInternal(responseData{Message: "internal error"}, w, r)
 		return
 	}
-
 	pod := k8s.Pod{
 		Name:    uid,
 		Image:   fmt.Sprintf("golang:%s-alpine3.18", request.Version),
@@ -66,17 +65,19 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, vol := range pod.Volumes {
 		if _, err = vol.Create(r.Context(), client, "playground"); err != nil {
-			panic(err)
+			responseErrInternal(responseData{Message: "internal error"}, w, r)
+			return
 		}
 	}
-
 	if _, err = pod.Create(r.Context(), client, "playground"); err != nil {
-		panic(err)
+		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		return
 	}
 
 	watcher, err := pod.Watch(r.Context(), client, playgroundNs)
 	if err != nil {
-		panic(err)
+		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		return
 	}
 	for event := range watcher.ResultChan() {
 		p, ok := event.Object.(*corev1.Pod)
@@ -89,7 +90,8 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	output, err := pod.Logs(r.Context(), client, playgroundNs)
 	if err != nil {
-		panic(err)
+		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		return
 	}
 	responseOk(responseData{Data: output}, w, r)
 }
