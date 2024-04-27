@@ -164,4 +164,4 @@ tasks:
   minikube/apps/entrypoint-lookup:
     desc: "Minikube tunnel to entrypoint"
     cmds:
-      - kubectl port-forward svc/entrypoint 3000:3000 -n {{ .namespace_apps }}
+      - minikube service entrypoint -n {{ .namespace_apps }}

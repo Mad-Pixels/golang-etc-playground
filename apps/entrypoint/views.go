@@ -93,5 +93,11 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 		responseErrInternal(responseData{Message: "internal error"}, w, r)
 		return
 	}
+	defer func() {
+		for _, vol := range pod.Volumes {
+			_ = vol.Remove(r.Context(), client, playgroundNs)
+		}
+		_ = pod.Remove(r.Context(), client, playgroundNs)
+	}()
 	responseOk(responseData{Data: output}, w, r)
 }
