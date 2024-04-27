@@ -92,7 +92,7 @@ tasks:
     cmds:
       - |
         echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
-        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
+        docker build --force-rm --target {{ ARCH }} -t chelyshkin/{{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
           --build-arg GO_VERSION={{ .golang_version }} \
           --build-arg NAME={{ .APP }} \
         -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
