@@ -7,7 +7,6 @@ import (
 
 	"github.com/Mad-Pixels/golang-playground/apps"
 	"github.com/Mad-Pixels/golang-playground/apps/pkg/k8s"
-	"github.com/Mad-Pixels/golang-playground/apps/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -31,49 +30,46 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	request.Name = r.Context().Value("uid").(string)
 
-	mapSpecTpl, err := utils.Execute(
-		playgroundMapSpec,
-		request,
-	)
-	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
+	///
+	pod := k8s.Pod{
+		Name:    request.Name,
+		Image:   fmt.Sprintf("golang:%s-alpine3.18", request.Version),
+		ExecCmd: []string{"go", "run", "/workspace/main.go"},
+		Volumes: []*k8s.Volume{
+			{
+				Name: request.Name,
+				Path: "/workspace",
+				Files: []*k8s.File{
+					{
+						Filepath: "main.go",
+						Source:   request.Source,
+					},
+				},
+			},
+		},
+		Envs: []*k8s.Env{
+			{
+				Name:  "GOCACHE",
+				Value: "/tmp/.cache",
+			},
+		},
 	}
-	podSpecTpl, err := utils.Execute(
-		playgroundPodSpec,
-		request,
-	)
+	client, err := k8s.SelfClient()
 	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
+		panic(err)
 	}
-
-	mapSpec, err := k8s.ToConfigMap(mapSpecTpl)
-	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
+	for _, vol := range pod.Volumes {
+		if _, err = vol.Create(r.Context(), client, "playground"); err != nil {
+			panic(err)
+		}
 	}
-	podSpec, err := k8s.ToPod(podSpecTpl)
-	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
-	}
-
-	_, err = k8s.ConfigMapCreate(r.Context(), playgroundNs, mapSpec)
-	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
-	}
-	_, err = k8s.PodCreate(r.Context(), playgroundNs, podSpec)
-	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
+	if _, err = pod.Create(r.Context(), client, "playground"); err != nil {
+		panic(err)
 	}
 
-	watcher, err := k8s.PodWatch(r.Context(), playgroundNs, request.Name)
+	watcher, err := pod.Watch(r.Context(), client, playgroundNs)
 	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
+		panic(err)
 	}
 	for event := range watcher.ResultChan() {
 		p, ok := event.Object.(*corev1.Pod)
@@ -86,13 +82,9 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	output, err := k8s.Read(request.Name, playgroundNs)
+	output, err := pod.Logs(r.Context(), client, playgroundNs)
 	if err != nil {
-		responseErrInternal(responseData{Message: err.Error()}, w, r)
-		return
+		panic(err)
 	}
-
 	responseOk(responseData{Data: output}, w, r)
-	defer k8s.ConfigMapDelete(r.Context(), playgroundNs, request.Name)
-	defer k8s.PodDelete(r.Context(), playgroundNs, request.Name)
 }
