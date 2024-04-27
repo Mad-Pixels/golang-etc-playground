@@ -28,21 +28,31 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 		responseErrBadRequest(responseData{Message: "invalid body"}, w, r)
 		return
 	}
-	request.Name = r.Context().Value("uid").(string)
 
-	///
+	uid := r.Context().Value("uid").(string)
+	source, err := request.SourceDecode()
+	if err != nil {
+		responseErrBadRequest(responseData{Message: "invalid body"}, w, r)
+		return
+	}
+	client, err := k8s.SelfClient()
+	if err != nil {
+		responseErrInternal(responseData{Message: "internal error"}, w, r)
+		return
+	}
+
 	pod := k8s.Pod{
-		Name:    request.Name,
+		Name:    uid,
 		Image:   fmt.Sprintf("golang:%s-alpine3.18", request.Version),
 		ExecCmd: []string{"go", "run", "/workspace/main.go"},
 		Volumes: []*k8s.Volume{
 			{
-				Name: request.Name,
+				Name: uid,
 				Path: "/workspace",
 				Files: []*k8s.File{
 					{
 						Filepath: "main.go",
-						Source:   request.Source,
+						Source:   source,
 					},
 				},
 			},
@@ -54,15 +64,12 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
-	client, err := k8s.SelfClient()
-	if err != nil {
-		panic(err)
-	}
 	for _, vol := range pod.Volumes {
 		if _, err = vol.Create(r.Context(), client, "playground"); err != nil {
 			panic(err)
 		}
 	}
+
 	if _, err = pod.Create(r.Context(), client, "playground"); err != nil {
 		panic(err)
 	}
@@ -74,10 +81,8 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	for event := range watcher.ResultChan() {
 		p, ok := event.Object.(*corev1.Pod)
 		if !ok {
-			fmt.Println("unexpected type")
 			continue
 		}
-		fmt.Printf("Pod %s is in phase %s\n", p.Name, p.Status.Phase)
 		if p.Status.Phase == "Failed" || p.Status.Phase == "Succeeded" {
 			break
 		}
