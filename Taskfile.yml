@@ -1,0 +1,167 @@
+version: 3
+
+vars:
+  root_dir:
+    sh: git rev-parse --show-toplevel
+  minikube_dir:
+    "{{ .root_dir }}/minikube"
+  apps_dir:
+    "{{ .root_dir }}/apps"
+
+  minikube_mem: 3072
+  minikube_cpu: 3
+
+  namespace_playground: playground
+  namespace_apps: apps
+
+  docker_repo: golang-playground
+  golang_version: 1.22
+
+tasks:
+  default:
+    desc: "Default task"
+    cmds:
+      - echo "Please enter a task name or use -l / --list-all to list all available tasks"
+    silent: true
+
+  check/env/app:
+    desc: "Check that APP value exist"
+    cmds:
+      - |
+        if [ "{{ .APP }}" = "" ]; then
+          echo "Error: APP variable is not set. Use APP=app_directory.";
+          exit 1;
+        fi
+    silent: true
+    internal: true
+
+  check/env/tag:
+    desc: "Check that TAG value exist"
+    cmds:
+      - |
+        if [ "{{ .TAG }}" = "" ]; then
+          echo "Error: TAG variable is not set. Use TAG=latest.";
+          exit 1;
+        fi
+    silent: true
+    internal: true
+
+  check/env/image:
+    desc: "Check that IMAGE value exist"
+    cmds:
+      - |
+        if [ "{{ .IMAGE }}" = "" ]; then
+          echo "Error: IMAGE variable is not set. Use IMAGE=docker_image.";
+          exit 1;
+        fi
+    silent: true
+    internal: true
+
+  apps/vendor:
+    desc: "Run go mod vendor"
+    cmds:
+      - |
+        cd {{ .apps_dir }} && go mod tidy
+        if [ -d "{{ .apps_dir }}/vendor" ]; then
+          echo "{{ .apps_dir }}/vendor folder already exist"
+        else
+          go mod vendor
+        fi
+    silent: true
+    internal: true
+
+  apps/local/build:
+    desc: "Build an application, add arg APP with directory inside ./apps"
+    deps:
+      - check/env/app
+      - apps/vendor
+    dir: "{{ .apps_dir }}"
+    cmds:
+      - |
+        echo "Building the application in directory: {{ .apps_dir }}/{{ .APP }}"
+        go build -mod=vendor -ldflags="-w -s" -o {{ .root_dir }}/bin/{{ .APP }} {{ .apps_dir }}/{{ .APP }}/cmd
+        chmod a+x {{ .root_dir }}/bin/{{ .APP }}
+    silent: true
+
+  apps/docker/build:
+    desc: "Build a docker images with application, add arg APP with directory inside ./apps"
+    deps:
+      - check/env/app
+      - check/env/tag
+      - apps/vendor
+    cmds:
+      - |
+        echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
+        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
+          --build-arg GO_VERSION={{ .golang_version }} \
+          --build-arg NAME={{ .APP }} \
+        -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
+    silent: true
+
+  apps/minikube/build:
+    desc: "INSIDE MINIKUBE ENV: Build a docker images with application, add arg APP with directory inside ./apps"
+    deps:
+      - check/env/app
+      - check/env/tag
+      - apps/vendor
+    cmds:
+      - |
+        eval $(minikube docker-env)
+        echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
+        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
+          --build-arg GO_VERSION={{ .golang_version }} \
+          --build-arg NAME={{ .APP }} \
+        -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
+    silent: true
+
+  apps/docker/push:
+    desc: "Push docker image"
+    env:
+      DOCKER_USER: '{{ .DOCKER_USER }}'
+      DOCKER_PASS: '{{ .DOCKER_PASS }}'
+    deps:
+      - check/env/image
+      - check/env/tag
+    cmds:
+      - |
+        echo "Pushing image: {{ .IMAGE }} with tag {{ .TAG }}"
+        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+        docker push {{ .IMAGE }}:{{ .TAG }}
+    silent: true
+
+  minikube/deploy/infra:
+    desc: "Deploy infra to minikube"
+    cmds:
+      - kubectl apply -f minikube/infra/role-pod-manager.yml
+
+  minikube/deploy/apps:
+    desc: "Deploy service to minikube"
+    cmds:
+      - for: ["entrypoint"]
+        cmd: |
+          if helm list -q -n {{ .namespace_apps }} | grep -q {{ .ITEM }}; then
+            helm upgrade {{ .ITEM }} {{ .minikube_dir }}/{{ .ITEM }} -n {{ .namespace_apps }}
+          else
+            kubectl create namespace {{ .namespace_apps }} || true
+            helm install {{ .ITEM }} {{ .minikube_dir }}/{{ .ITEM }} -n {{ .namespace_apps }}
+          fi
+
+  minikube/up:
+    desc: "Run minikube with service"
+    cmds:
+      - minikube stop || true
+      - minikube cache delete
+      - minikube delete
+      - minikube config set memory {{ .minikube_mem }}
+      - minikube config set cpus {{ .minikube_cpu }}
+      - minikube start --driver=docker
+
+      - kubectl create namespace {{ .namespace_playground }}
+      - kubectl create namespace {{ .namespace_apps }}
+      - task: minikube/deploy/infra
+      - task: minikube/deploy/apps
+
+  minikube/apps/entrypoint-lookup:
+    desc: "Minikube tunnel to entrypoint"
+    cmds:
+      - minikube service entrypoint -n {{ .namespace_apps }}
