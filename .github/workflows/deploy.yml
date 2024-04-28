@@ -21,7 +21,10 @@ jobs:
         run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
       - name: Build
         run: |
-          task apps/docker/build APP=entrypoint TAG=latest
+          docker build --force-rm --target {{ ARCH }} -t ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prd-golang-etc-playground:latest \
+            --build-arg GO_VERSION=1.22 \
+            --build-arg NAME=entrypoint \
+          -f ./Dockerfile .
       - name: Push
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
