@@ -16,7 +16,7 @@ vars:
   namespace_playground: playground
   namespace_apps: apps
 
-  docker_repo: prd-golang-etc-playground
+  docker_repo: chelyshkin/golang-etc-playground
   golang_version: 1.22
 
 tasks:
@@ -118,13 +118,17 @@ tasks:
 
   apps/docker/push:
     desc: "Push docker image"
+    env:
+      DOCKER_USER: '{{ .DOCKER_USER }}'
+      DOCKER_PASS: '{{ .DOCKER_PASS }}'
     deps:
-      - check/env/image
+      - check/env/app
       - check/env/tag
     cmds:
       - |
-        echo "Pushing image: {{ .IMAGE }} with tag {{ .TAG }}"
-        docker push {{ .IMAGE }}:{{ .TAG }}
+        echo "Pushing image: {{ .APP }} with tag {{ .TAG }}"
+        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+        docker push {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}
     silent: true
 
   minikube/deploy/infra:
