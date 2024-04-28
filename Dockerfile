@@ -19,7 +19,7 @@ ARG NAME
 COPY apps /go/src/apps
 WORKDIR /go/src/apps
 
-ENV GOARCH=arm64
+ENV GOARCH=amd64
 RUN go mod vendor
 RUN --mount=type=cache,target="${GOCACHE}" \
       go build \
