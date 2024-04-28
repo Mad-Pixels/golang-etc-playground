@@ -1,6 +1,8 @@
 version: 3
 
 vars:
+  exec_k8s:
+    sh: "which kubectl > /dev/null 2>&1 && echo 'kubectl' || echo 'minikube kubectl --'"
   root_dir:
     sh: git rev-parse --show-toplevel
   minikube_dir:
@@ -8,8 +10,8 @@ vars:
   apps_dir:
     "{{ .root_dir }}/apps"
 
-  minikube_mem: 3072
-  minikube_cpu: 3
+  minikube_mem: 6144
+  minikube_cpu: 2
 
   namespace_playground: playground
   namespace_apps: apps
@@ -132,7 +134,7 @@ tasks:
   minikube/deploy/infra:
     desc: "Deploy infra to minikube"
     cmds:
-      - kubectl apply -f minikube/infra/role-pod-manager.yml
+      - "{{ .exec_k8s }} apply -f minikube/infra/role-pod-manager.yml"
 
   minikube/deploy/apps:
     desc: "Deploy service to minikube"
@@ -142,7 +144,7 @@ tasks:
           if helm list -q -n {{ .namespace_apps }} | grep -q {{ .ITEM }}; then
             helm upgrade {{ .ITEM }} {{ .minikube_dir }}/{{ .ITEM }} -n {{ .namespace_apps }}
           else
-            kubectl create namespace {{ .namespace_apps }} || true
+            {{ .exec_k8s }} create namespace {{ .namespace_apps }} || true
             helm install {{ .ITEM }} {{ .minikube_dir }}/{{ .ITEM }} -n {{ .namespace_apps }}
           fi
 
@@ -156,8 +158,8 @@ tasks:
       - minikube config set cpus {{ .minikube_cpu }}
       - minikube start --driver=docker
 
-      - kubectl create namespace {{ .namespace_playground }}
-      - kubectl create namespace {{ .namespace_apps }}
+      - "{{ .exec_k8s }} create namespace {{ .namespace_playground }}"
+      - "{{ .exec_k8s }} create namespace {{ .namespace_apps }}"
       - task: minikube/deploy/infra
       - task: minikube/deploy/apps
 
