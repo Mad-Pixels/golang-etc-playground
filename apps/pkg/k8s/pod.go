@@ -42,8 +42,8 @@ var PodSpecTpl = `
                         "memory": "400Mi"
                     },
                     "limits": {
-                        "cpu": "1600m",
-                        "memory": "600Mi"
+                        "cpu": "2000m",
+                        "memory": "800Mi"
                     }
                 },
                 "command": {{ toJson .ExecCmd }},
