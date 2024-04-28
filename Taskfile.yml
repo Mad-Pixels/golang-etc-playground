@@ -16,7 +16,7 @@ vars:
   namespace_playground: playground
   namespace_apps: apps
 
-  docker_repo: golang-playground
+  docker_repo: prd-golang-etc-playground
   golang_version: 1.22
 
 tasks:
@@ -94,7 +94,7 @@ tasks:
     cmds:
       - |
         echo "Building image for: {{ .apps_dir }}/{{ .APP }}"
-        docker build --force-rm --target {{ ARCH }} -t chelyshkin/{{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
+        docker build --force-rm --target {{ ARCH }} -t {{ .docker_repo }}-{{ .APP }}:{{ .TAG }} \
           --build-arg GO_VERSION={{ .golang_version }} \
           --build-arg NAME={{ .APP }} \
         -f {{ .root_dir }}/Dockerfile {{ .root_dir }}
@@ -118,16 +118,12 @@ tasks:
 
   apps/docker/push:
     desc: "Push docker image"
-    env:
-      DOCKER_USER: '{{ .DOCKER_USER }}'
-      DOCKER_PASS: '{{ .DOCKER_PASS }}'
     deps:
       - check/env/image
       - check/env/tag
     cmds:
       - |
         echo "Pushing image: {{ .IMAGE }} with tag {{ .TAG }}"
-        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
         docker push {{ .IMAGE }}:{{ .TAG }}
     silent: true
 
