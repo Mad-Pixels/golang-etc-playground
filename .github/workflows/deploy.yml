@@ -21,11 +21,11 @@ jobs:
         run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
       - name: Build
         run: |
-          docker build --force-rm --target amd64 -t ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prd-golang-etc-playground:latest \
+          docker build --force-rm --target amd64 -t ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prd-golang-etc-playground-entrypoint:latest \
             --build-arg GO_VERSION=1.22 \
             --build-arg NAME=entrypoint \
           -f ./Dockerfile .
       - name: Push
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-          docker push ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prd-golang-etc-playground:latest
+          docker push ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prd-golang-etc-playground-entrypoint:latest
