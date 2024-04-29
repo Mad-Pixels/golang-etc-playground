@@ -29,10 +29,17 @@ func execTpl(data string, values any) (string, error) {
 	funcMap := template.FuncMap{
 		"escape": func(a string) string { return strings.ReplaceAll(a, `"`, `\"`) },
 		"sub":    func(a, b int) int { return a - b },
-		"toJson": func(a interface{}) string {
+		"toList": func(a interface{}) string {
 			b, err := json.Marshal(a)
 			if err != nil {
 				return "[]"
+			}
+			return string(b)
+		},
+		"toJson": func(input string) string {
+			b, err := json.Marshal(input)
+			if err != nil {
+				return ""
 			}
 			return string(b)
 		},

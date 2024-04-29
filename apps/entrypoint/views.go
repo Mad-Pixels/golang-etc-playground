@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Mad-Pixels/golang-playground/apps"
-	"github.com/Mad-Pixels/golang-playground/apps/pkg/k8s"
+	"github.com/Mad-Pixels/golang-etc-playground/apps"
+	"github.com/Mad-Pixels/golang-etc-playground/apps/pkg/k8s"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -65,6 +65,7 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, vol := range pod.Volumes {
 		if _, err = vol.Create(r.Context(), client, "playground"); err != nil {
+			fmt.Println(err)
 			responseErrInternal(responseData{Message: "internal error"}, w, r)
 			return
 		}

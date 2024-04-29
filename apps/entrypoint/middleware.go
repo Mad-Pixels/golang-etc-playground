@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Mad-Pixels/golang-playground/apps"
-	"github.com/Mad-Pixels/golang-playground/apps/pkg/ws"
+	"github.com/Mad-Pixels/golang-etc-playground/apps"
+	"github.com/Mad-Pixels/golang-etc-playground/apps/pkg/ws"
 )
 
 func customLogger(l ws.Logger) func(w http.ResponseWriter, r *http.Request) error {

@@ -10,7 +10,7 @@ env:
     value: "{{ .Values.LOG_LEVEL }}"
 
 image:
-  repository: chelyshkin/golang-etc-playground-entrypoint
+  repository: madpixels/golang-etc-playground-entrypoint
   pullPolicy: IfNotPresent
   tag: "latest"
 

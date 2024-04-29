@@ -1,4 +1,4 @@
-module github.com/Mad-Pixels/golang-playground/apps
+module github.com/Mad-Pixels/golang-etc-playground/apps
 
 go 1.22.0
 
