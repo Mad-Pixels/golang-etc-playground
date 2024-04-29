@@ -16,7 +16,7 @@ vars:
   namespace_playground: playground
   namespace_apps: apps
 
-  docker_repo: chelyshkin/golang-etc-playground
+  docker_repo: madpixels/golang-etc-playground
   golang_version: 1.22
 
 tasks:
@@ -43,17 +43,6 @@ tasks:
       - |
         if [ "{{ .TAG }}" = "" ]; then
           echo "Error: TAG variable is not set. Use TAG=latest.";
-          exit 1;
-        fi
-    silent: true
-    internal: true
-
-  check/env/image:
-    desc: "Check that IMAGE value exist"
-    cmds:
-      - |
-        if [ "{{ .IMAGE }}" = "" ]; then
-          echo "Error: IMAGE variable is not set. Use IMAGE=docker_image.";
           exit 1;
         fi
     silent: true
@@ -125,10 +114,9 @@ tasks:
       - check/env/app
       - check/env/tag
     cmds:
-      - |
-        echo "Pushing image: {{ .APP }} with tag {{ .TAG }}"
-        docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
-        docker push {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}
+      - echo "Pushing {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}"
+      - docker login -u ${ DOCKER_USER } -p ${ DOCKER_PASS }
+      - docker push {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}
     silent: true
 
   minikube/deploy/infra:
