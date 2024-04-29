@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Mad-Pixels/golang-playground/apps"
-	"github.com/Mad-Pixels/golang-playground/apps/pkg/k8s"
+	"github.com/Mad-Pixels/golang-etc-playground/apps"
+	"github.com/Mad-Pixels/golang-etc-playground/apps/pkg/k8s"
 	corev1 "k8s.io/api/core/v1"
 )
 

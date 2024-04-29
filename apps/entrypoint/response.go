@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Mad-Pixels/golang-playground/apps"
+	"github.com/Mad-Pixels/golang-etc-playground/apps"
 )
 
 type responseData struct {

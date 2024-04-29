@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Mad-Pixels/golang-playground/apps"
+	"github.com/Mad-Pixels/golang-etc-playground/apps"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/valyala/fasthttp/reuseport"
