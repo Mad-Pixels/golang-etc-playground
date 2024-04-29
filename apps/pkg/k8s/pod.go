@@ -46,7 +46,7 @@ var PodSpecTpl = `
                         "memory": "800Mi"
                     }
                 },
-                "command": {{ toJson .ExecCmd }},
+                "command": {{ toList .ExecCmd }},
                 "volumeMounts": [
                     {{- $len := len .Volumes }}{{ range $index, $vol := .Volumes }}
                     {
