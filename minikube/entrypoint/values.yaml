@@ -43,11 +43,6 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 1000
 
-service:
-  serviceAccountName: fluent-bit
-  type: ClusterIP
-  port: 3000
-
 ingress:
   enabled: true
   className: ""
