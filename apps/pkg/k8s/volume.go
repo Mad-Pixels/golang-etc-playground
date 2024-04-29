@@ -17,7 +17,7 @@ var CfgMapSpecTpl = `
   },
   "data": { {{- $length := len .Files -}}
     {{- range $index, $file := .Files }}
-    "{{ $file.Filepath }}": "{{ $file.Source | escape }}"{{if lt $index (sub $length 1)}},{{end}}
+    "{{ $file.Filepath }}": {{ jsonMarshal $file.Source }}{{if lt $index (sub $length 1)}},{{end}}
     {{- end }}
   }
 }

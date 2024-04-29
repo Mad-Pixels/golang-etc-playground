@@ -65,6 +65,7 @@ func handlerPlayground(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, vol := range pod.Volumes {
 		if _, err = vol.Create(r.Context(), client, "playground"); err != nil {
+			fmt.Println(err)
 			responseErrInternal(responseData{Message: "internal error"}, w, r)
 			return
 		}

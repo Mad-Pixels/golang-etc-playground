@@ -36,6 +36,13 @@ func execTpl(data string, values any) (string, error) {
 			}
 			return string(b)
 		},
+		"jsonMarshal": func(input string) string {
+			b, err := json.Marshal(input)
+			if err != nil {
+				return ""
+			}
+			return string(b)
+		},
 	}
 	tpl, err := template.New("tpl").Funcs(funcMap).Parse(data)
 	if err != nil {
