@@ -114,9 +114,10 @@ tasks:
       - check/env/app
       - check/env/tag
     cmds:
-      - echo "Pushing {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}"
-      - docker login -u ${ DOCKER_USER } -p ${ DOCKER_PASS }
-      - docker push {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}
+      - |
+        echo "Pushing {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}"
+        docker login -u ${ DOCKER_USER } -p ${ DOCKER_PASS }
+        docker push {{ .docker_repo }}-{{ .APP }}:{{ .TAG }}
     silent: true
 
   minikube/deploy/infra:
