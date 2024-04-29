@@ -43,6 +43,10 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 1000
 
+service:
+  port: 3000
+  nodePort: 30000
+
 ingress:
   enabled: true
   className: ""
