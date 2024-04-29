@@ -30,7 +30,8 @@ serviceAccount:
   name: "pod-manager"
 
 podAnnotations: {}
-podLabels: {}
+podLabels:
+  app: entrypoint
 
 podSecurityContext: {}
 # fsGroup: 2000
