@@ -1,6 +1,8 @@
 package entrypoint
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 )
 
@@ -14,10 +16,19 @@ func (a App) routerTools() {
 	a.server.Router().Mount("/api/internal", router())
 }
 
+func setupCORS(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
 func (a App) routerViews() {
 	router := func() chi.Router {
 		r := chi.NewRouter()
-		r.Post("/playground", handlerPlayground)
+		r.Post("/playground", func(w http.ResponseWriter, r *http.Request) {
+			setupCORS(&w, r)
+			handlerPlayground(w, r)
+		})
 		return r
 	}
 	a.server.Router().Mount("/api/v1", router())
