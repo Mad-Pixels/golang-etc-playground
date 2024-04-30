@@ -34,6 +34,7 @@ func response(data responseData, w http.ResponseWriter, r *http.Request) {
 	data.Id = r.Context().Value("uid").(string)
 	data.Host = apps.ReplicaID()
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(data.Status)
 
