@@ -29,6 +29,10 @@ func (a App) routerViews() {
 			setupCORS(&w, r)
 			handlerPlayground(w, r)
 		})
+		r.Options("/playground", func(w http.ResponseWriter, r *http.Request) {
+			setupCORS(&w, r)
+			w.WriteHeader(http.StatusOK)
+		})
 		return r
 	}
 	a.server.Router().Mount("/api/v1", router())
